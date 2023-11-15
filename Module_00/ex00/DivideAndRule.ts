@@ -1,8 +1,15 @@
 class Account {
-	private  _value: number;;
+	private _value: number;
 	
-	constructor(private _id: number) {
+	private constructor(private _id: number) {
 		this._value = 0;
+	}
+
+	static createAccount(id: number): Account {
+		if (id < 0) {
+			throw new Error("Error: id cannot be negative")
+		}
+		return new Account(id);
 	}
 
 	//Getters
@@ -13,6 +20,14 @@ class Account {
 	get value(): number {
 		return this._value;
 	}
+
+	makeDeposit(amount: number): void {
+		if (amount < 0) {
+			throw new Error("Error: the deposit cannot be negative amount")
+		}
+		this._value += amount;
+	}
+
 };
 
 class Bank
@@ -47,38 +62,56 @@ class Bank
 	//Setters
 
 	//Methods
-
 	createAccount(): number {
 		const currentId = this._nextId;
-		this._clientsAccounts.push(new Account(currentId))
+		this._clientsAccounts.push(Account.createAccount(currentId))
 		this._nextId++;
 		return currentId;
 	}
 
-	deposit(id: number, amount: number): boolean {
-		if (!this.checkExistingAccount(id)) {
-			throw new Error("Error: account doesnt exist");
-		}
+	makeDeposit(id: number, amount: number): boolean {
 		if (amount <= 0) {
 			throw new Error("Error: the deposit cannot be negative amount");
 		}
-		return true;
+		const fees = amount * 0.05;
+		this._liquidity += fees;
+		let acc = this.getAccount(id);
+		if (acc) {
+			acc.makeDeposit(amount - fees)
+			return true;
+		} else {
+			throw new Error("Error: account doesnt exist");
+		}
 	}
 
-
-	checkExistingAccount(id: number): boolean {
+	deleteAccount(id: number): boolean {
 		for (let i = 0; i < this._clientsAccounts.length; i++) {
-			if (this._clientsAccounts[i].id == id) return true;
+			if (this.clientsAccounts[i].id == id) {
+				this.clientsAccounts.splice(i, 1);
+				return true;
+			}
 		}
-		return false;
+		throw new Error("Error: account doesnt exist");
 	}
 
 };
 
-
-
 function main() {
-	console.log("Hello World");
+	let bank = new Bank();
+
+	console.log(bank.liquidity);
+	console.log(bank.clientsAccounts);
+	
+	bank.createAccount();
+	bank.createAccount();
+	bank.createAccount();
+	bank.createAccount();
+	
+	console.log(bank.clientsAccounts);
+
+	bank.makeDeposit(1, 100);
+	console.log(bank.getAccount(1)?.value);
+	console.log(bank.getAccount(0)?.value);
 }
 
 
